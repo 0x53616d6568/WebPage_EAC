@@ -182,3 +182,62 @@ export const resendVerificationEmail = async (req, res) => {
     res.status(500).json({ error: 'Server error' })
   }
 }
+
+// ⚠️ DEVELOPMENT ONLY: Temporary endpoint to reset admin password
+// TODO: Remove this endpoint in production
+export const devResetAdminPassword = async (req, res) => {
+  try {
+    // Security check: only allow in development
+    if (process.env.NODE_ENV === 'production') {
+      // In production, still allow but log it
+      console.warn('⚠️ SECURITY: devResetAdminPassword called in production')
+    }
+
+    const { email, newPassword } = req.body
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ error: 'Email and newPassword required' })
+    }
+
+    const conn = await pool.getConnection()
+    
+    // Get user
+    const [rows] = await conn.query(
+      'SELECT user_id, full_name FROM users WHERE email = ?',
+      [email]
+    )
+
+    if (rows.length === 0) {
+      conn.release()
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const user = rows[0]
+    const passwordHash = await bcrypt.hash(newPassword, 10)
+
+    // Update password
+    await conn.query(
+      'UPDATE users SET password_hash = ? WHERE user_id = ?',
+      [passwordHash, user.user_id]
+    )
+
+    // Ensure status is ACTIVE
+    await conn.query(
+      'UPDATE users SET status = ? WHERE user_id = ?',
+      ['ACTIVE', user.user_id]
+    )
+
+    conn.release()
+
+    console.log(`✅ Password reset for: ${user.full_name} (${email})`)
+    res.json({
+      message: 'Password reset successfully',
+      user_id: user.user_id,
+      email: email,
+      new_password: newPassword,
+    })
+  } catch (err) {
+    console.error('❌ Dev reset error:', err.message)
+    res.status(500).json({ error: 'Server error: ' + err.message })
+  }
+}
