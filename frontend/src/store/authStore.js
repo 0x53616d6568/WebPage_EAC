@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 import axios from 'axios'
 
-// Use relative URLs so Vite proxy works
-const API_URL = '/api'
+// Use environment variable for API URL, fallback to relative URL for development
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 export const useAuthStore = create((set) => ({
   user: null,
