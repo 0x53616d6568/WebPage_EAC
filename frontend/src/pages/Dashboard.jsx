@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useThemeStore } from '../store/themeStore'
 import api from '../api/client'
-import { MdGridView, MdPeople, MdLocationCity, MdAssignment, MdRefresh, MdAdd, MdEdit, MdDelete } from 'react-icons/md'
+import { MdGridView, MdPeople, MdLocationCity, MdAssignment, MdRefresh, MdAdd, MdEdit, MdDelete, MdFace } from 'react-icons/md'
 import { getTheme } from '../theme/design-system'
 import ModernSidebar from '../components/ModernSidebar'
 import UserFormModal from '../components/UserFormModal'
 import DoorFormModal from '../components/DoorFormModal'
 import RequestsManagement from '../components/RequestsManagement'
 import ProfileModal from '../components/ProfileModal'
+import UserFaceEnrollmentModal from '../components/UserFaceEnrollmentModal'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -24,6 +25,8 @@ export default function DashboardPage() {
   const [userModalOpen, setUserModalOpen] = useState(false)
   const [doorModalOpen, setDoorModalOpen] = useState(false)
   const [profileModalOpen, setProfileModalOpen] = useState(false)
+  const [faceEnrollmentModalOpen, setFaceEnrollmentModalOpen] = useState(false)
+  const [selectedUserForFace, setSelectedUserForFace] = useState(null)
   const [editingUser, setEditingUser] = useState(null)
   const [editingDoor, setEditingDoor] = useState(null)
 
@@ -421,6 +424,20 @@ export default function DashboardPage() {
                             gap: theme.spacing.md,
                             justifyContent: 'center',
                           }}>
+                            <button 
+                              className="action-btn" 
+                              style={{
+                                backgroundColor: theme.colors.infoLight,
+                                color: theme.colors.primary,
+                              }}
+                              onClick={() => {
+                                setSelectedUserForFace(u)
+                                setFaceEnrollmentModalOpen(true)
+                              }}
+                              title="Enroll Face"
+                            >
+                              <MdFace size={14} />
+                            </button>
                             <button className="action-btn action-btn-delete" onClick={() => handleDeleteUser(u.user_id)}>
                               <MdDelete size={14} />
                             </button>
@@ -699,6 +716,20 @@ export default function DashboardPage() {
           onUpdate={() => {
             setProfileModalOpen(false)
             window.location.reload()
+          }}
+        />
+      )}
+
+      {faceEnrollmentModalOpen && selectedUserForFace && (
+        <UserFaceEnrollmentModal
+          user={selectedUserForFace}
+          isDarkMode={isDarkMode}
+          onClose={() => {
+            setFaceEnrollmentModalOpen(false)
+            setSelectedUserForFace(null)
+          }}
+          onSuccess={() => {
+            fetchUsers()
           }}
         />
       )}
