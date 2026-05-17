@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import axios from 'axios'
+import api from '../api/client'
 import { MdGridView, MdPeople, MdLocationCity, MdAssignment, MdLogout, MdRefresh, MdCheckCircle, MdHighlightOff, MdAdd, MdEdit, MdDelete, MdFace, MdAssignmentInd } from 'react-icons/md'
 import UserFormModal from '../components/UserFormModal'
 import DoorFormModal from '../components/DoorFormModal'
@@ -51,9 +51,7 @@ export default function DashboardPage() {
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      const response = await axios.get('http://localhost:8888/api/users', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      })
+      const response = await api.get('/users')
       setUsers(response.data.data || response.data)
     } catch (err) {
       console.error('Error fetching users:', err)
@@ -65,9 +63,7 @@ export default function DashboardPage() {
   const fetchDoors = async () => {
     setLoading(true)
     try {
-      const response = await axios.get('http://localhost:8888/api/doors', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      })
+      const response = await api.get('/doors')
       setDoors(response.data.data || response.data)
     } catch (err) {
       console.error('Error fetching doors:', err)
@@ -79,9 +75,7 @@ export default function DashboardPage() {
   const fetchLogs = async () => {
     setLoading(true)
     try {
-      const response = await axios.get('http://localhost:8888/api/logs', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      })
+      const response = await api.get('/logs')
       setLogs((response.data.data || response.data).slice(0, 100))
     } catch (err) {
       console.error('Error fetching logs:', err)

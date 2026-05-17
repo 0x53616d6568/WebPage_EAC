@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../api/client'
 import { MdClose } from 'react-icons/md'
 
 const COLORS = {
@@ -78,13 +78,9 @@ export default function DoorFormModal({ door = null, accessToken, onClose }) {
     setLoading(true)
     try {
       if (!isEditMode) {
-        await axios.post('http://localhost:8888/api/doors', formData, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        })
+        await api.post('/doors', formData)
       } else {
-        await axios.put(`http://localhost:8888/api/doors/${door.door_id}`, formData, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        })
+        await api.put(`/doors/${door.door_id}`, formData)
       }
       onClose(true)
     } catch (err) {

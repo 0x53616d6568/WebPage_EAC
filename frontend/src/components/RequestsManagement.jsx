@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../api/client'
 import { MdCheckCircle, MdCancel, MdDone, MdClose } from 'react-icons/md'
 
 const COLORS = {
@@ -35,11 +35,8 @@ export default function RequestsManagement({ accessToken, onClose }) {
     setLoading(true)
     setError('')
     try {
-      const response = await axios.get(
-        filter === 'ALL' ? 'http://localhost:8888/api/requests' : `http://localhost:8888/api/requests?status=${filter}`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        }
+      const response = await api.get(
+        filter === 'ALL' ? '/requests' : `/requests?status=${filter}`
       )
       setRequests(response.data.data || [])
     } catch (err) {
@@ -53,12 +50,9 @@ export default function RequestsManagement({ accessToken, onClose }) {
   const handleReview = async (requestId, status) => {
     setReviewLoading(true)
     try {
-      await axios.patch(
-        `http://localhost:8888/api/requests/${requestId}/review`,
-        { status },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        }
+      await api.patch(
+        `/requests/${requestId}/review`,
+        { status }
       )
       await fetchRequests()
       setReviewingId(null)

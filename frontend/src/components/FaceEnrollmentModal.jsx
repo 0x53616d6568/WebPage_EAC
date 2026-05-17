@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../api/client'
 import { MdClose, MdCheckCircle, MdError, MdImage } from 'react-icons/md'
 
 const COLORS = {
@@ -78,12 +78,11 @@ export default function FaceEnrollmentModal({ user = null, accessToken, onClose 
         setUploadProgress((prev) => Math.min(prev + 20, 90))
       }, 200)
 
-      const response = await axios.post(
-        `http://localhost:8888/api/users/${user.user_id}/face-enrollment`,
+      const response = await api.post(
+        `/users/${user.user_id}/face-enrollment`,
         formData,
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'multipart/form-data',
           },
         }
