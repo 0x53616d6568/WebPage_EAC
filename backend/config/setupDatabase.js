@@ -1,5 +1,5 @@
 // Database schema setup - run once to create/update tables
-import pool from './config/database.js'
+import pool from './database.js'
 
 export const setupDatabase = async () => {
   try {
