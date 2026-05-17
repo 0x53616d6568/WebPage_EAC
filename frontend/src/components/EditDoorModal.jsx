@@ -8,8 +8,8 @@ export default function EditDoorModal({ door, isDarkMode, onClose, onSuccess }) 
   const [formData, setFormData] = useState({
     door_name: door?.door_name || '',
     location: door?.location || '',
-    status: door?.status || 'ACTIVE',
-    access_type: door?.access_type || 'BIOMETRIC',
+    security_level: door?.security_level || 1,
+    fallback_method: door?.fallback_method || 'PIN',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -183,11 +183,11 @@ export default function EditDoorModal({ door, isDarkMode, onClose, onSuccess }) 
               fontWeight: 600,
               color: theme.colors.textPrimary,
             }}>
-              Status
+              Security Level
             </label>
             <select
-              name="status"
-              value={formData.status}
+              name="security_level"
+              value={formData.security_level}
               onChange={handleChange}
               style={{
                 width: '100%',
@@ -199,9 +199,11 @@ export default function EditDoorModal({ door, isDarkMode, onClose, onSuccess }) 
                 boxSizing: 'border-box',
               }}
             >
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
-              <option value="MAINTENANCE">Maintenance</option>
+              <option value="1">Level 1 - Basic</option>
+              <option value="2">Level 2 - Standard</option>
+              <option value="3">Level 3 - High</option>
+              <option value="4">Level 4 - Very High</option>
+              <option value="5">Level 5 - Maximum</option>
             </select>
           </div>
 
@@ -213,11 +215,11 @@ export default function EditDoorModal({ door, isDarkMode, onClose, onSuccess }) 
               fontWeight: 600,
               color: theme.colors.textPrimary,
             }}>
-              Access Type
+              Fallback Method
             </label>
             <select
-              name="access_type"
-              value={formData.access_type}
+              name="fallback_method"
+              value={formData.fallback_method}
               onChange={handleChange}
               style={{
                 width: '100%',
@@ -229,11 +231,9 @@ export default function EditDoorModal({ door, isDarkMode, onClose, onSuccess }) 
                 boxSizing: 'border-box',
               }}
             >
-              <option value="BIOMETRIC">Biometric</option>
-              <option value="RFID">RFID</option>
-              <option value="PIN">PIN</option>
-              <option value="CARD">Card</option>
-              <option value="MULTI">Multi-Factor</option>
+              <option value="PIN">PIN Code</option>
+              <option value="RFID">RFID Card</option>
+              <option value="MANUAL">Manual Override</option>
             </select>
           </div>
 

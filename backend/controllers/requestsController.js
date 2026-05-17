@@ -120,14 +120,16 @@ export const reviewRequest = async (req, res) => {
   try {
     const { status } = req.body
 
-    if (!['APPROVED', 'REJECTED'].includes(status)) {
-      return res.status(400).json({ error: 'Status must be APPROVED or REJECTED' })
+    if (!['APPROVED', 'DECLINED', 'REJECTED'].includes(status)) {
+      return res.status(400).json({ error: 'Status must be APPROVED, DECLINED, or REJECTED' })
     }
 
     const conn = await pool.getConnection()
+    // Normalize DECLINED to REJECTED for database storage if needed
+    const dbStatus = status === 'DECLINED' ? 'REJECTED' : status
     await conn.query(
       `UPDATE requests SET status = ?, reviewed_by = ? WHERE request_id = ?`,
-      [status, req.user.user_id, req.params.request_id]
+      [dbStatus, req.user.user_id, req.params.request_id]
     )
     conn.release()
 

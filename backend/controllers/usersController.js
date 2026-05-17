@@ -128,3 +128,77 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Server error' })
   }
 }
+
+export const assignManager = async (req, res) => {
+  try {
+    const { manager_id } = req.body
+    const userId = req.params.user_id
+
+    const conn = await pool.getConnection()
+    
+    // Verify manager exists and has manager role
+    if (manager_id) {
+      const [managerRows] = await conn.query(
+        'SELECT user_id FROM users WHERE user_id = ? AND role_id IN (SELECT role_id FROM roles WHERE role_name LIKE "%Manager%" OR role_name LIKE "%Supervisor%")',
+        [manager_id]
+      )
+      
+      if (!managerRows.length) {
+        conn.release()
+        return res.status(400).json({ error: 'Invalid manager selected' })
+      }
+    }
+
+    // Update user's manager_id
+    await conn.query(
+      'UPDATE users SET manager_id = ? WHERE user_id = ?',
+      [manager_id || null, userId]
+    )
+    conn.release()
+
+    res.json({ message: 'Manager assigned successfully' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Server error' })
+  }
+}
+
+export const enrollFace = async (req, res) => {
+  try {
+    const userId = req.params.user_id
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' })
+    }
+
+    const conn = await pool.getConnection()
+    
+    // Check if user exists
+    const [userRows] = await conn.query('SELECT user_id FROM users WHERE user_id = ?', [userId])
+    if (!userRows.length) {
+      conn.release()
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // Store face embedding file reference (could be file path, S3 URL, or base64 encoded)
+    const faceData = Buffer.from(req.file.buffer).toString('base64')
+    const fileName = `${userId}_${Date.now()}.jpg`
+    
+    // Insert or update face_embeddings table
+    await conn.query(`
+      INSERT INTO face_embeddings (user_id, face_image, file_name, uploaded_at)
+      VALUES (?, ?, ?, NOW())
+      ON DUPLICATE KEY UPDATE 
+        face_image = VALUES(face_image),
+        file_name = VALUES(file_name),
+        uploaded_at = NOW()
+    `, [userId, faceData, fileName])
+    
+    conn.release()
+
+    res.json({ message: 'Face enrolled successfully', fileName })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Server error' })
+  }
+}

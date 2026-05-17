@@ -1,5 +1,5 @@
 import express from 'express'
-import { getAllDoors, getDoorById, createDoor, updateDoor, deleteDoor, getAccessRules, setAccessRule, deleteAccessRule } from '../controllers/doorsController.js'
+import { getAllDoors, getDoorById, createDoor, updateDoor, deleteDoor, getAccessRules, setAccessRule, deleteAccessRule, assignAccess } from '../controllers/doorsController.js'
 import { verifyToken } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -14,5 +14,8 @@ router.delete('/:door_id', verifyToken, deleteDoor)
 router.get('/:door_id/rules', verifyToken, getAccessRules)
 router.post('/:door_id/rules', verifyToken, setAccessRule)
 router.delete('/rules/:rule_id', verifyToken, deleteAccessRule)
+
+// Assign users to door
+router.post('/:door_id/assign-access', verifyToken, assignAccess)
 
 export default router

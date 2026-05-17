@@ -142,3 +142,43 @@ export const deleteAccessRule = async (req, res) => {
     res.status(500).json({ error: 'Server error' })
   }
 }
+
+export const assignAccess = async (req, res) => {
+  try {
+    const { user_ids } = req.body
+    const doorId = req.params.door_id
+
+    if (!user_ids || !Array.isArray(user_ids)) {
+      return res.status(400).json({ error: 'user_ids array is required' })
+    }
+
+    const conn = await pool.getConnection()
+    
+    // First, verify door exists
+    const [doorRows] = await conn.query('SELECT door_id FROM doors WHERE door_id = ?', [doorId])
+    if (!doorRows.length) {
+      conn.release()
+      return res.status(404).json({ error: 'Door not found' })
+    }
+
+    // Delete existing access for this door
+    await conn.query('DELETE FROM door_access WHERE door_id = ?', [doorId])
+
+    // Add new access for each user
+    if (user_ids.length > 0) {
+      const values = user_ids.map(uid => [uid, doorId, 1]) // 1 = access granted
+      const query = `INSERT INTO door_access (user_id, door_id, access_granted) VALUES ?`
+      await conn.query(query, [values])
+    }
+    
+    conn.release()
+
+    res.json({ 
+      message: `Access assigned to ${user_ids.length} user(s) successfully`,
+      count: user_ids.length 
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Server error' })
+  }
+}
