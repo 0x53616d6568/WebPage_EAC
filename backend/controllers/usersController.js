@@ -49,6 +49,20 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' })
     }
 
+    const conn = await pool.getConnection()
+    
+    // Verify role_id exists
+    try {
+      const [roleRows] = await conn.query('SELECT role_id FROM roles WHERE role_id = ?', [role_id])
+      if (!roleRows.length) {
+        conn.release()
+        return res.status(400).json({ error: 'Invalid role_id' })
+      }
+    } catch (roleErr) {
+      conn.release()
+      return res.status(400).json({ error: 'Unable to validate role' })
+    }
+
     // Generate temporary password
     const generateTempPassword = () => {
       const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
@@ -58,7 +72,7 @@ export const createUser = async (req, res) => {
     const tempPassword = generateTempPassword();
     const passwordHash = await bcrypt.hash(tempPassword, 10)
 
-    const conn = await pool.getConnection()
+    // Create user with ACTIVE status (matches production default)
     await conn.query(
       `INSERT INTO users (full_name, email, password_hash, phone, department, role_id, status, is_first_login) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -80,7 +94,7 @@ export const createUser = async (req, res) => {
     if (err.code === 'ER_DUP_ENTRY') {
       res.status(400).json({ error: 'Email already exists' })
     } else {
-      res.status(500).json({ error: 'Server error' })
+      res.status(500).json({ error: 'Server error: ' + err.message })
     }
   }
 }
@@ -92,19 +106,35 @@ export const updateUser = async (req, res) => {
 
     const conn = await pool.getConnection()
     
+    // Verify user exists
+    const [userCheck] = await conn.query('SELECT user_id FROM users WHERE user_id = ?', [userId])
+    if (!userCheck.length) {
+      conn.release()
+      return res.status(404).json({ error: 'User not found' })
+    }
+    
+    // Verify role_id if provided
+    if (role_id) {
+      const [roleRows] = await conn.query('SELECT role_id FROM roles WHERE role_id = ?', [role_id])
+      if (!roleRows.length) {
+        conn.release()
+        return res.status(400).json({ error: 'Invalid role_id' })
+      }
+    }
+    
     // If password is provided, hash it and update it too
     if (password) {
       const passwordHash = await bcrypt.hash(password, 10)
       await conn.query(
         `UPDATE users SET full_name = ?, email = ?, phone = ?, department = ?, role_id = ?, status = ?, password_hash = ? 
          WHERE user_id = ?`,
-        [full_name, email, phone || null, department || null, role_id, status || 'ACTIVE', passwordHash, userId]
+        [full_name || null, email || null, phone || null, department || null, role_id || null, status || 'ACTIVE', passwordHash, userId]
       )
     } else {
       await conn.query(
         `UPDATE users SET full_name = ?, email = ?, phone = ?, department = ?, role_id = ?, status = ? 
          WHERE user_id = ?`,
-        [full_name, email, phone || null, department || null, role_id, status || 'ACTIVE', userId]
+        [full_name || null, email || null, phone || null, department || null, role_id || null, status || 'ACTIVE', userId]
       )
     }
     conn.release()
@@ -112,7 +142,11 @@ export const updateUser = async (req, res) => {
     res.json({ message: 'User updated successfully' })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Server error' })
+    if (err.code === 'ER_DUP_ENTRY') {
+      res.status(400).json({ error: 'Email already exists' })
+    } else {
+      res.status(500).json({ error: 'Server error: ' + err.message })
+    }
   }
 }
 
@@ -131,32 +165,9 @@ export const deleteUser = async (req, res) => {
 
 export const assignManager = async (req, res) => {
   try {
-    const { manager_id } = req.body
-    const userId = req.params.user_id
-
-    const conn = await pool.getConnection()
-    
-    // Verify manager exists and has manager role
-    if (manager_id) {
-      const [managerRows] = await conn.query(
-        'SELECT user_id FROM users WHERE user_id = ? AND role_id IN (SELECT role_id FROM roles WHERE role_name LIKE "%Manager%" OR role_name LIKE "%Supervisor%")',
-        [manager_id]
-      )
-      
-      if (!managerRows.length) {
-        conn.release()
-        return res.status(400).json({ error: 'Invalid manager selected' })
-      }
-    }
-
-    // Update user's manager_id
-    await conn.query(
-      'UPDATE users SET manager_id = ? WHERE user_id = ?',
-      [manager_id || null, userId]
-    )
-    conn.release()
-
-    res.json({ message: 'Manager assigned successfully' })
+    // Note: Production database does not have a manager_id column in users table
+    // This endpoint is a placeholder for future manager assignment functionality
+    res.json({ message: 'Manager assignment not yet configured in database schema' })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Server error' })
@@ -184,10 +195,14 @@ export const enrollFace = async (req, res) => {
     const embeddingData = req.file.buffer
     const modelVersion = 'arcface-r100'
     
-    // Insert face embedding
+    // Insert or update face embedding
     await conn.query(`
       INSERT INTO face_embeddings (user_id, embedding, enrolled_at, model_version)
       VALUES (?, ?, NOW(), ?)
+      ON DUPLICATE KEY UPDATE
+        embedding = VALUES(embedding),
+        enrolled_at = NOW(),
+        model_version = VALUES(model_version)
     `, [userId, embeddingData, modelVersion])
     
     conn.release()
