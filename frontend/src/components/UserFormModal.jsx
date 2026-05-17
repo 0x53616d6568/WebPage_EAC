@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import api from '../api/client'
 import { MdClose } from 'react-icons/md'
 
 const COLORS = {
@@ -81,15 +82,11 @@ export default function UserFormModal({ user = null, accessToken, onClose }) {
           department: formData.department,
           role_id: formData.role_id,
         }
-        await axios.post('http://localhost:8888/api/users', createData, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        })
+        await api.post('/users', createData)
       } else {
         const updateData = { ...formData }
         if (!updateData.password) delete updateData.password
-        await axios.put(`http://localhost:8888/api/users/${user.user_id}`, updateData, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        })
+        await api.put(`/users/${user.user_id}`, updateData)
       }
       onClose(true)
     } catch (err) {
