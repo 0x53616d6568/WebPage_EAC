@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useThemeStore } from '../store/themeStore'
 import api from '../api/client'
-import { MdGridView, MdPeople, MdLocationCity, MdAssignment, MdRefresh, MdAdd, MdEdit, MdDelete, MdFace } from 'react-icons/md'
+import { MdGridView, MdPeople, MdLocationCity, MdAssignment, MdRefresh, MdAdd, MdEdit, MdDelete, MdFace, MdLock, MdCheckCircle } from 'react-icons/md'
 import { getTheme } from '../theme/design-system'
 import ModernSidebar from '../components/ModernSidebar'
 import UserFormModal from '../components/UserFormModal'
@@ -11,6 +11,10 @@ import DoorFormModal from '../components/DoorFormModal'
 import RequestsManagement from '../components/RequestsManagement'
 import ProfileModal from '../components/ProfileModal'
 import UserFaceEnrollmentModal from '../components/UserFaceEnrollmentModal'
+import EditUserModal from '../components/EditUserModal'
+import DoorAccessModal from '../components/DoorAccessModal'
+import EditDoorModal from '../components/EditDoorModal'
+import RequestManagementModal from '../components/RequestManagementModal'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -26,7 +30,14 @@ export default function DashboardPage() {
   const [doorModalOpen, setDoorModalOpen] = useState(false)
   const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [faceEnrollmentModalOpen, setFaceEnrollmentModalOpen] = useState(false)
+  const [editUserModalOpen, setEditUserModalOpen] = useState(false)
+  const [doorAccessModalOpen, setDoorAccessModalOpen] = useState(false)
+  const [editDoorModalOpen, setEditDoorModalOpen] = useState(false)
+  const [requestManagementModalOpen, setRequestManagementModalOpen] = useState(false)
   const [selectedUserForFace, setSelectedUserForFace] = useState(null)
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState(null)
+  const [selectedDoorForAccess, setSelectedDoorForAccess] = useState(null)
+  const [selectedDoorForEdit, setSelectedDoorForEdit] = useState(null)
   const [editingUser, setEditingUser] = useState(null)
   const [editingDoor, setEditingDoor] = useState(null)
 
@@ -181,6 +192,7 @@ export default function DashboardPage() {
                 {activeTab === 'overview' ? 'Dashboard' : 
                  activeTab === 'users' ? 'Users Management' :
                  activeTab === 'doors' ? 'Doors Management' :
+                 activeTab === 'requests' ? 'Access Requests' :
                  'Access Logs'}
               </h1>
               <p style={{
@@ -191,7 +203,7 @@ export default function DashboardPage() {
                 Welcome back, {user?.full_name}
               </p>
             </div>
-            {activeTab !== 'overview' && activeTab !== 'logs' && (
+            {activeTab !== 'overview' && activeTab !== 'logs' && activeTab !== 'requests' && (
               <button style={{
                 ...theme.typography.body,
                 backgroundColor: theme.colors.primary,
@@ -237,16 +249,26 @@ export default function DashboardPage() {
                   { label: 'Total Users', value: users.length, icon: MdPeople, color: theme.colors.primary },
                   { label: 'Active Doors', value: doors.length, icon: MdLocationCity, color: theme.colors.success },
                   { label: 'Access Logs', value: logs.length, icon: MdAssignment, color: theme.colors.warning },
+                  { label: 'Pending Requests', value: 0, icon: MdCheckCircle, color: theme.colors.info, action: () => setRequestManagementModalOpen(true) },
                 ].map((stat, idx) => {
                   const Icon = stat.icon
                   return (
-                    <div key={idx} className="stat-card" style={{
+                    <div key={idx} className="stat-card" onClick={stat.action} style={{
                       backgroundColor: theme.colors.bgCard,
                       border: `1px solid ${theme.colors.border}`,
                       borderRadius: theme.borderRadius.lg,
                       padding: theme.spacing.xl,
                       boxShadow: theme.shadows.sm,
-                    }}>
+                      cursor: stat.action ? 'pointer' : 'default',
+                      transition: theme.transitions.normal,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (stat.action) e.currentTarget.style.borderColor = stat.color
+                    }}
+                    onMouseLeave={(e) => {
+                      if (stat.action) e.currentTarget.style.borderColor = theme.colors.border
+                    }}
+                    >
                       <div style={{
                         display: 'flex',
                         alignItems: 'flex-start',
@@ -431,6 +453,20 @@ export default function DashboardPage() {
                                 color: theme.colors.primary,
                               }}
                               onClick={() => {
+                                setSelectedUserForEdit(u)
+                                setEditUserModalOpen(true)
+                              }}
+                              title="Edit User"
+                            >
+                              <MdEdit size={14} />
+                            </button>
+                            <button 
+                              className="action-btn" 
+                              style={{
+                                backgroundColor: theme.colors.infoLight,
+                                color: theme.colors.primary,
+                              }}
+                              onClick={() => {
                                 setSelectedUserForFace(u)
                                 setFaceEnrollmentModalOpen(true)
                               }}
@@ -552,6 +588,34 @@ export default function DashboardPage() {
                             gap: theme.spacing.md,
                             justifyContent: 'center',
                           }}>
+                            <button 
+                              className="action-btn" 
+                              style={{
+                                backgroundColor: theme.colors.infoLight,
+                                color: theme.colors.primary,
+                              }}
+                              onClick={() => {
+                                setSelectedDoorForEdit(d)
+                                setEditDoorModalOpen(true)
+                              }}
+                              title="Edit Door"
+                            >
+                              <MdEdit size={14} />
+                            </button>
+                            <button 
+                              className="action-btn" 
+                              style={{
+                                backgroundColor: theme.colors.infoLight,
+                                color: theme.colors.primary,
+                              }}
+                              onClick={() => {
+                                setSelectedDoorForAccess(d)
+                                setDoorAccessModalOpen(true)
+                              }}
+                              title="Assign Access"
+                            >
+                              <MdLock size={14} />
+                            </button>
                             <button className="action-btn action-btn-delete" onClick={() => handleDeleteDoor(d.door_id)}>
                               <MdDelete size={14} />
                             </button>
@@ -730,6 +794,59 @@ export default function DashboardPage() {
           }}
           onSuccess={() => {
             fetchUsers()
+          }}
+        />
+      )}
+
+      {editUserModalOpen && selectedUserForEdit && (
+        <EditUserModal
+          user={selectedUserForEdit}
+          isDarkMode={isDarkMode}
+          onClose={() => {
+            setEditUserModalOpen(false)
+            setSelectedUserForEdit(null)
+          }}
+          onSuccess={() => {
+            fetchUsers()
+          }}
+        />
+      )}
+
+      {doorAccessModalOpen && selectedDoorForAccess && (
+        <DoorAccessModal
+          door={selectedDoorForAccess}
+          users={users}
+          isDarkMode={isDarkMode}
+          onClose={() => {
+            setDoorAccessModalOpen(false)
+            setSelectedDoorForAccess(null)
+          }}
+          onSuccess={() => {
+            fetchDoors()
+          }}
+        />
+      )}
+
+      {editDoorModalOpen && selectedDoorForEdit && (
+        <EditDoorModal
+          door={selectedDoorForEdit}
+          isDarkMode={isDarkMode}
+          onClose={() => {
+            setEditDoorModalOpen(false)
+            setSelectedDoorForEdit(null)
+          }}
+          onSuccess={() => {
+            fetchDoors()
+          }}
+        />
+      )}
+
+      {requestManagementModalOpen && (
+        <RequestManagementModal
+          isDarkMode={isDarkMode}
+          onClose={() => setRequestManagementModalOpen(false)}
+          onSuccess={() => {
+            // Optionally refresh data
           }}
         />
       )}

@@ -9,6 +9,7 @@ const menuItems = [
   { id: 'users', label: 'Users', icon: MdPeople },
   { id: 'doors', label: 'Doors', icon: MdLocationCity },
   { id: 'logs', label: 'Access Logs', icon: MdAssignment },
+  { id: 'requests', label: 'Requests', icon: MdAssignment },
 ]
 
 export default function ModernSidebar({ activeTab, setActiveTab, onProfileClick }) {
