@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { MdLock, MdMail, MdCheckCircle } from 'react-icons/md'
+import { useThemeStore } from '../store/themeStore'
+import { getTheme } from '../theme/design-system'
+import { MdLock, MdMail, MdArrowForward } from 'react-icons/md'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -10,6 +12,14 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const { login } = useAuthStore()
   const navigate = useNavigate()
+  const { isDarkMode, setDarkMode } = useThemeStore()
+  
+  // Force dark mode on login page
+  useEffect(() => {
+    if (!isDarkMode) {
+      setDarkMode(true)
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -30,19 +40,8 @@ export default function LoginPage() {
     }
   }
 
-  // Luxury color palette
-  const luxuryColors = {
-    darkBg: '#0F1419',
-    darkCard: '#1A1F2E',
-    gold: '#D4AF37',
-    goldLight: '#E8C547',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#B0B8C1',
-    accentBlue: '#2E5090',
-    accentBlueDark: '#1A2F52',
-    error: '#FF6B6B',
-    errorBg: '#2C1414',
-  }
+  // Get dark theme
+  const theme = getTheme(true)
 
   return (
     <div style={{
@@ -50,8 +49,8 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: `linear-gradient(135deg, ${luxuryColors.darkBg} 0%, ${luxuryColors.accentBlueDark} 50%, ${luxuryColors.darkBg} 100%)`,
-      padding: '24px',
+      background: `linear-gradient(135deg, ${theme.colors.bg} 0%, ${theme.colors.bgSecondary} 100%)`,
+      padding: '20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
       position: 'relative',
       overflow: 'hidden',
@@ -60,7 +59,7 @@ export default function LoginPage() {
         @keyframes fadeInUp {
           from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
           }
           to {
             opacity: 1;
@@ -68,46 +67,47 @@ export default function LoginPage() {
           }
         }
 
-        @keyframes glow {
-          0%, 100% {
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 0 10px 40px rgba(0, 0, 0, 0.3);
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
           }
-          50% {
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.5), 0 10px 40px rgba(0, 0, 0, 0.3);
+          to {
+            opacity: 1;
+            transform: translateY(0);
           }
         }
 
-        .login-container {
-          animation: fadeInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .login-card {
+          animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .input-wrapper {
+          position: relative;
+          margin-bottom: 16px;
         }
 
         .input-field {
-          position: relative;
-          margin-bottom: 20px;
-        }
-
-        .input-field input {
           width: 100%;
           padding: 14px 16px 14px 44px;
-          border: 2px solid rgba(212, 175, 55, 0.2);
-          border-radius: 12px;
+          background-color: ${theme.colors.bgCard};
+          border: 1px solid ${theme.colors.border};
+          border-radius: 10px;
           font-size: 14px;
+          color: ${theme.colors.textPrimary};
           transition: all 0.3s ease;
-          background-color: rgba(255, 255, 255, 0.05);
-          color: ${luxuryColors.textPrimary};
           box-sizing: border-box;
-          backdrop-filter: blur(10px);
+          font-family: inherit;
         }
 
-        .input-field input::placeholder {
-          color: ${luxuryColors.textSecondary};
+        .input-field::placeholder {
+          color: ${theme.colors.textSecondary};
         }
 
-        .input-field input:focus {
+        .input-field:focus {
           outline: none;
-          border-color: ${luxuryColors.gold};
-          background-color: rgba(255, 255, 255, 0.08);
-          box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1), inset 0 0 20px rgba(212, 175, 55, 0.05);
+          border-color: ${theme.colors.primary};
+          box-shadow: 0 0 0 3px ${theme.colors.primaryLight}40;
         }
 
         .input-icon {
@@ -115,132 +115,155 @@ export default function LoginPage() {
           left: 14px;
           top: 50%;
           transform: translateY(-50%);
-          color: ${luxuryColors.gold};
+          color: ${theme.colors.primary};
           pointer-events: none;
           font-size: 18px;
         }
 
-        .sign-in-btn {
-          background: linear-gradient(135deg, ${luxuryColors.gold} 0%, ${luxuryColors.goldLight} 100%);
+        .submit-btn {
+          background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.primaryDark} 100%);
+          color: white;
+          border: none;
+          padding: 14px 20px;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
           transition: all 0.3s ease;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          font-family: inherit;
         }
 
-        .sign-in-btn:hover:not(:disabled) {
+        .submit-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+          box-shadow: 0 8px 20px ${theme.colors.primary}40;
         }
 
-        .sign-in-btn:active:not(:disabled) {
+        .submit-btn:active:not(:disabled) {
           transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        .error-msg {
+          background-color: ${theme.colors.dangerLight};
+          border: 1px solid ${theme.colors.danger};
+          color: ${theme.colors.danger};
+          padding: 12px 14px;
+          border-radius: 8px;
+          font-size: 13px;
+          margin-bottom: 16px;
+          animation: slideDown 0.3s ease-out;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 500;
+        }
+
+        .logo-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 60px;
+          height: 60px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.primaryDark} 100%);
+          margin-bottom: 16px;
+          box-shadow: 0 8px 20px ${theme.colors.primary}30;
         }
       `}</style>
 
-      {/* Background decoration */}
+      {/* Subtle background elements */}
       <div style={{
         position: 'absolute',
-        top: '-50%',
+        top: '-20%',
         right: '-10%',
-        width: '500px',
-        height: '500px',
-        borderRadius: '50%',
-        background: `radial-gradient(circle, ${luxuryColors.accentBlue}20 0%, transparent 70%)`,
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '-30%',
-        left: '-5%',
         width: '400px',
         height: '400px',
         borderRadius: '50%',
-        background: `radial-gradient(circle, ${luxuryColors.accentBlue}15 0%, transparent 70%)`,
+        background: `radial-gradient(circle, ${theme.colors.primary}08 0%, transparent 70%)`,
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '-15%',
+        left: '-5%',
+        width: '350px',
+        height: '350px',
+        borderRadius: '50%',
+        background: `radial-gradient(circle, ${theme.colors.primary}05 0%, transparent 70%)`,
         pointerEvents: 'none',
       }} />
 
-      <div className="login-container" style={{
+      {/* Login Card */}
+      <div className="login-card" style={{
         width: '100%',
-        maxWidth: '460px',
-        backgroundColor: luxuryColors.darkCard,
-        borderRadius: '20px',
-        boxShadow: `0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(212, 175, 55, 0.15)`,
+        maxWidth: '420px',
+        backgroundColor: theme.colors.bgCard,
+        borderRadius: '16px',
+        border: `1px solid ${theme.colors.border}`,
         padding: '48px 40px',
-        border: `1px solid rgba(212, 175, 55, 0.15)`,
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
         position: 'relative',
         zIndex: 10,
       }}>
-        {/* Logo Section */}
+        {/* Header */}
         <div style={{
           textAlign: 'center',
-          marginBottom: 40,
+          marginBottom: 32,
         }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '70px',
-            height: '70px',
-            borderRadius: '16px',
-            background: `linear-gradient(135deg, ${luxuryColors.gold} 0%, ${luxuryColors.goldLight} 100%)`,
-            marginBottom: 20,
-            boxShadow: `0 10px 30px rgba(212, 175, 55, 0.3)`,
-          }}>
-            <MdLock size={36} color={luxuryColors.darkBg} />
+          <div className="logo-icon">
+            <MdLock size={32} color="white" />
           </div>
           
           <h1 style={{
-            fontSize: '32px',
+            fontSize: '28px',
             fontWeight: 700,
-            color: luxuryColors.textPrimary,
+            color: theme.colors.textPrimary,
             margin: 0,
-            marginBottom: 8,
-            letterSpacing: '-0.5px',
+            marginBottom: 4,
           }}>
             SecureApp
           </h1>
           
           <p style={{
-            fontSize: '13px',
-            color: luxuryColors.gold,
+            fontSize: '12px',
+            color: theme.colors.textSecondary,
             margin: 0,
             fontWeight: 500,
             letterSpacing: '0.5px',
+            textTransform: 'uppercase',
           }}>
-            ENTERPRISE ACCESS CONTROL
+            Enterprise Access Control
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '24px',
-        }}>
+        <form onSubmit={handleSubmit}>
           {error && (
-            <div style={{
-              backgroundColor: luxuryColors.errorBg,
-              border: `1px solid ${luxuryColors.error}`,
-              borderRadius: '12px',
-              padding: '12px 16px',
-              color: luxuryColors.error,
-              fontSize: '13px',
-              fontWeight: 500,
-              animation: 'slideDown 0.3s ease-out',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}>
+            <div className="error-msg">
               <div style={{
-                width: '4px',
-                height: '4px',
+                width: '3px',
+                height: '3px',
                 borderRadius: '50%',
-                backgroundColor: luxuryColors.error,
+                backgroundColor: theme.colors.danger,
+                flexShrink: 0,
               }} />
               {error}
             </div>
           )}
 
           {/* Email Input */}
-          <div className="input-field">
+          <div className="input-wrapper">
             <MdMail className="input-icon" />
             <input
               type="email"
@@ -249,11 +272,12 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
               required
+              className="input-field"
             />
           </div>
 
           {/* Password Input */}
-          <div className="input-field">
+          <div className="input-wrapper">
             <MdLock className="input-icon" />
             <input
               type="password"
@@ -262,41 +286,31 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
               required
+              className="input-field"
             />
           </div>
 
-          {/* Sign In Button */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="sign-in-btn"
+            className="submit-btn"
             style={{
-              width: '100%',
-              padding: '14px 16px',
-              color: luxuryColors.darkBg,
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '14px',
-              fontWeight: 700,
-              cursor: loading ? 'not-allowed' : 'pointer',
               marginTop: '8px',
-              opacity: loading ? 0.8 : 1,
-              letterSpacing: '0.5px',
-              textTransform: 'uppercase',
             }}
           >
-            {loading ? '⏳ Signing in...' : '🔓 Sign In'}
+            {loading ? '⏳ Signing in' : <>Sign In <MdArrowForward size={16} /></>}
           </button>
         </form>
 
         {/* Footer */}
         <div style={{
-          marginTop: 36,
-          paddingTop: 20,
-          borderTop: `1px solid rgba(212, 175, 55, 0.1)`,
+          marginTop: 28,
+          paddingTop: 16,
+          borderTop: `1px solid ${theme.colors.border}`,
           textAlign: 'center',
           fontSize: '11px',
-          color: luxuryColors.textSecondary,
+          color: theme.colors.textSecondary,
           letterSpacing: '0.3px',
         }}>
           © 2026 SecureApp. All rights reserved.
