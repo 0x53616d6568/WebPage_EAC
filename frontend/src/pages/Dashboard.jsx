@@ -15,6 +15,7 @@ import EditUserModal from '../components/EditUserModal'
 import DoorAccessModal from '../components/DoorAccessModal'
 import EditDoorModal from '../components/EditDoorModal'
 import RequestManagementModal from '../components/RequestManagementModal'
+import ManagerAssignmentModal from '../components/ManagerAssignmentModal'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -34,8 +35,10 @@ export default function DashboardPage() {
   const [doorAccessModalOpen, setDoorAccessModalOpen] = useState(false)
   const [editDoorModalOpen, setEditDoorModalOpen] = useState(false)
   const [requestManagementModalOpen, setRequestManagementModalOpen] = useState(false)
+  const [managerAssignmentModalOpen, setManagerAssignmentModalOpen] = useState(false)
   const [selectedUserForFace, setSelectedUserForFace] = useState(null)
   const [selectedUserForEdit, setSelectedUserForEdit] = useState(null)
+  const [selectedUserForManager, setSelectedUserForManager] = useState(null)
   const [selectedDoorForAccess, setSelectedDoorForAccess] = useState(null)
   const [selectedDoorForEdit, setSelectedDoorForEdit] = useState(null)
   const [editingUser, setEditingUser] = useState(null)
@@ -445,7 +448,22 @@ export default function DashboardPage() {
                             display: 'flex',
                             gap: theme.spacing.md,
                             justifyContent: 'center',
+                            flexWrap: 'wrap',
                           }}>
+                            <button 
+                              className="action-btn" 
+                              style={{
+                                backgroundColor: theme.colors.infoLight,
+                                color: theme.colors.primary,
+                              }}
+                              onClick={() => {
+                                setSelectedUserForManager(u)
+                                setManagerAssignmentModalOpen(true)
+                              }}
+                              title="Assign Manager"
+                            >
+                              👤
+                            </button>
                             <button 
                               className="action-btn" 
                               style={{
@@ -847,6 +865,21 @@ export default function DashboardPage() {
           onClose={() => setRequestManagementModalOpen(false)}
           onSuccess={() => {
             // Optionally refresh data
+          }}
+        />
+      )}
+
+      {managerAssignmentModalOpen && selectedUserForManager && (
+        <ManagerAssignmentModal
+          user={selectedUserForManager}
+          managers={users.filter(u => u.role && (u.role.toLowerCase().includes('manager') || u.role.toLowerCase().includes('supervisor')))}
+          isDarkMode={isDarkMode}
+          onClose={() => {
+            setManagerAssignmentModalOpen(false)
+            setSelectedUserForManager(null)
+          }}
+          onSuccess={() => {
+            fetchUsers()
           }}
         />
       )}
