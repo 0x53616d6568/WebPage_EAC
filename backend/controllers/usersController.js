@@ -180,23 +180,19 @@ export const enrollFace = async (req, res) => {
       return res.status(404).json({ error: 'User not found' })
     }
 
-    // Store face embedding file reference (could be file path, S3 URL, or base64 encoded)
-    const faceData = Buffer.from(req.file.buffer).toString('base64')
-    const fileName = `${userId}_${Date.now()}.jpg`
+    // Store face embedding in the database
+    const embeddingData = req.file.buffer
+    const modelVersion = 'arcface-r100'
     
-    // Insert or update face_embeddings table
+    // Insert face embedding
     await conn.query(`
-      INSERT INTO face_embeddings (user_id, face_image, file_name, uploaded_at)
-      VALUES (?, ?, ?, NOW())
-      ON DUPLICATE KEY UPDATE 
-        face_image = VALUES(face_image),
-        file_name = VALUES(file_name),
-        uploaded_at = NOW()
-    `, [userId, faceData, fileName])
+      INSERT INTO face_embeddings (user_id, embedding, enrolled_at, model_version)
+      VALUES (?, ?, NOW(), ?)
+    `, [userId, embeddingData, modelVersion])
     
     conn.release()
 
-    res.json({ message: 'Face enrolled successfully', fileName })
+    res.json({ message: 'Face enrolled successfully' })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Server error' })
