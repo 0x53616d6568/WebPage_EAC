@@ -1,200 +1,206 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { MdLock } from 'react-icons/md'
-
-// Mobile app colors
-const COLORS = {
-  bg: '#0D1117',
-  bgCard: '#161B22',
-  bgInput: '#161B22',
-  border: '#21262D',
-  textPrimary: '#F0F6FC',
-  textSecondary: '#8B949E',
-  accent: '#2D7DD2',
-  accentLight: '#58A6FF',
-  danger: '#C53030',
-  dangerBg: '#2B0D0D',
-}
+import { MdLock, MdMail } from 'react-icons/md'
+import { THEME } from '../theme/design-system'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const { login } = useAuthStore()
   const navigate = useNavigate()
-  const { login, error } = useAuthStore()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     setLoading(true)
-    const success = await login(email, password)
-    if (success) {
-      navigate('/')
+    
+    try {
+      const success = await login(email, password)
+      if (success) {
+        navigate('/')
+      } else {
+        setError('Invalid email or password')
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: COLORS.bg,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
+      background: `linear-gradient(135deg, ${THEME.colors.primaryDark} 0%, ${THEME.colors.primary} 100%)`,
+      padding: THEME.spacing.lg,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
-      <div style={{
-        backgroundColor: COLORS.bgCard,
-        border: `1px solid ${COLORS.border}`,
-        borderRadius: '12px',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-        padding: '48px 40px',
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .login-card {
+          animation: fadeInUp 0.6s ease-out;
+        }
+
+        .input-field {
+          position: relative;
+        }
+
+        .input-field input {
+          width: 100%;
+          padding: 12px 16px;
+          padding-left: 40px;
+          border: 2px solid ${THEME.colors.border};
+          border-radius: ${THEME.borderRadius.md};
+          font-size: 14px;
+          transition: ${THEME.transitions.normal};
+          background-color: ${THEME.colors.bgCard};
+          color: ${THEME.colors.textPrimary};
+          box-sizing: border-box;
+        }
+
+        .input-field input:focus {
+          outline: none;
+          border-color: ${THEME.colors.primary};
+          box-shadow: 0 0 0 3px ${THEME.colors.infoLight};
+        }
+
+        .input-icon {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: ${THEME.colors.textTertiary};
+          pointer-events: none;
+        }
+      `}</style>
+
+      <div className="login-card" style={{
         width: '100%',
         maxWidth: '420px',
+        backgroundColor: THEME.colors.bgCard,
+        borderRadius: THEME.borderRadius.xl,
+        boxShadow: THEME.shadows.xl,
+        padding: THEME.spacing.xxxl,
       }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+        {/* Logo Section */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: THEME.spacing.xxxl,
+        }}>
           <div style={{
-            fontSize: '48px',
-            marginBottom: '16px',
-            color: COLORS.accentLight,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '56px',
+            height: '56px',
+            borderRadius: THEME.borderRadius.lg,
+            background: `linear-gradient(135deg, ${THEME.colors.primary}, ${THEME.colors.primaryLight})`,
+            marginBottom: THEME.spacing.lg,
           }}>
-            <MdLock size={48} />
+            <MdLock size={28} color="white" />
           </div>
-          <div style={{
-            fontSize: '24px',
-            fontWeight: '700',
-            color: COLORS.textPrimary,
-            marginBottom: '8px',
+          
+          <h1 style={{
+            ...THEME.typography.h3,
+            color: THEME.colors.textPrimary,
+            margin: 0,
+            marginBottom: THEME.spacing.sm,
           }}>
-            EAC Admin
-          </div>
-          <div style={{
-            fontSize: '13px',
-            color: COLORS.textSecondary,
+            SecureApp
+          </h1>
+          
+          <p style={{
+            ...THEME.typography.body,
+            color: THEME.colors.textSecondary,
+            margin: 0,
           }}>
             Enterprise Access Control
-          </div>
+          </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Email */}
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: '600',
-              color: COLORS.textPrimary,
-              marginBottom: '8px',
-            }}>
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@company.com"
-              required
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: '8px',
-                fontSize: '14px',
-                backgroundColor: COLORS.bgInput,
-                color: COLORS.textPrimary,
-                boxSizing: 'border-box',
-                transition: 'all 0.2s',
-                outline: 'none',
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = COLORS.accent
-                e.target.style.boxShadow = `0 0 0 2px rgba(45, 125, 210, 0.2)`
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = COLORS.border
-                e.target.style.boxShadow = 'none'
-              }}
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: '600',
-              color: COLORS.textPrimary,
-              marginBottom: '8px',
-            }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: '8px',
-                fontSize: '14px',
-                backgroundColor: COLORS.bgInput,
-                color: COLORS.textPrimary,
-                boxSizing: 'border-box',
-                transition: 'all 0.2s',
-                outline: 'none',
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = COLORS.accent
-                e.target.style.boxShadow = `0 0 0 2px rgba(45, 125, 210, 0.2)`
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = COLORS.border
-                e.target.style.boxShadow = 'none'
-              }}
-            />
-          </div>
-
-          {/* Error Message */}
+        <form onSubmit={handleSubmit} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: THEME.spacing.lg,
+        }}>
           {error && (
             <div style={{
-              backgroundColor: COLORS.dangerBg,
-              border: `1px solid ${COLORS.danger}`,
-              color: '#FF7875',
-              padding: '12px 16px',
-              borderRadius: '8px',
-              fontSize: '13px',
+              backgroundColor: THEME.colors.dangerLight,
+              border: `1px solid ${THEME.colors.danger}`,
+              borderRadius: THEME.borderRadius.md,
+              padding: `${THEME.spacing.md} ${THEME.spacing.lg}`,
+              color: THEME.colors.danger,
+              fontSize: '14px',
+              fontWeight: 500,
               animation: 'slideDown 0.3s ease-out',
             }}>
               {error}
             </div>
           )}
 
-          {/* Submit Button */}
+          {/* Email Input */}
+          <div className="input-field">
+            <MdMail className="input-icon" size={18} />
+            <input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+
+          {/* Password Input */}
+          <div className="input-field">
+            <MdLock className="input-icon" size={18} />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+
+          {/* Sign In Button */}
           <button
             type="submit"
             disabled={loading}
             style={{
               width: '100%',
-              padding: '12px 16px',
-              backgroundColor: loading ? '#30363D' : COLORS.accent,
+              padding: `${THEME.spacing.md} ${THEME.spacing.lg}`,
+              backgroundColor: loading ? THEME.colors.border : THEME.colors.primary,
               color: 'white',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: THEME.borderRadius.md,
               fontSize: '14px',
-              fontWeight: '600',
+              fontWeight: 600,
               cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s',
-              marginTop: '8px',
-              opacity: loading ? 0.6 : 1,
+              transition: THEME.transitions.normal,
+              marginTop: THEME.spacing.md,
+              opacity: loading ? 0.7 : 1,
             }}
-            onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = COLORS.accentLight)}
-            onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = COLORS.accent)}
+            onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = THEME.colors.primaryDark)}
+            onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = THEME.colors.primary)}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -202,30 +208,16 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div style={{
+          marginTop: THEME.spacing.xxl,
+          paddingTop: THEME.spacing.lg,
+          borderTop: `1px solid ${THEME.colors.border}`,
           textAlign: 'center',
-          marginTop: '32px',
-          paddingTop: '24px',
-          borderTop: `1px solid ${COLORS.border}`,
           fontSize: '11px',
-          color: COLORS.textSecondary,
+          color: THEME.colors.textTertiary,
         }}>
-          Enterprise Access Control System © 2026
+          Enterprise Access Control © 2026
         </div>
       </div>
-
-      <style>{`
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   )
 }
-
