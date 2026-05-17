@@ -872,7 +872,7 @@ export default function DashboardPage() {
       {managerAssignmentModalOpen && selectedUserForManager && (
         <ManagerAssignmentModal
           user={selectedUserForManager}
-          managers={users.filter(u => u.role && (u.role.toLowerCase().includes('manager') || u.role.toLowerCase().includes('supervisor')))}
+          managers={users.filter(u => u.role_name && (u.role_name.toLowerCase().includes('manager') || u.role_name.toLowerCase().includes('supervisor')))}
           isDarkMode={isDarkMode}
           onClose={() => {
             setManagerAssignmentModalOpen(false)
