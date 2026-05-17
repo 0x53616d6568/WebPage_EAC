@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { useThemeStore } from '../store/themeStore'
 import api from '../api/client'
 import { MdGridView, MdPeople, MdLocationCity, MdAssignment, MdRefresh, MdAdd, MdEdit, MdDelete } from 'react-icons/md'
-import { THEME } from '../theme/design-system'
+import { getTheme } from '../theme/design-system'
 import ModernSidebar from '../components/ModernSidebar'
 import UserFormModal from '../components/UserFormModal'
 import DoorFormModal from '../components/DoorFormModal'
 import RequestsManagement from '../components/RequestsManagement'
+import ProfileModal from '../components/ProfileModal'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { user, logout, accessToken } = useAuthStore()
+  const { isDarkMode } = useThemeStore()
+  const theme = getTheme(isDarkMode)
   const [activeTab, setActiveTab] = useState('overview')
   const [users, setUsers] = useState([])
   const [doors, setDoors] = useState([])
@@ -19,6 +23,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [userModalOpen, setUserModalOpen] = useState(false)
   const [doorModalOpen, setDoorModalOpen] = useState(false)
+  const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
   const [editingDoor, setEditingDoor] = useState(null)
 
@@ -87,7 +92,7 @@ export default function DashboardPage() {
     <div style={{
       display: 'flex',
       minHeight: '100vh',
-      backgroundColor: THEME.colors.bg,
+      backgroundColor: theme.colors.bg,
     }}>
       <style>{`
         @keyframes fadeIn {
@@ -104,42 +109,46 @@ export default function DashboardPage() {
         }
         
         .table-row:hover {
-          background-color: ${THEME.colors.bgSecondary};
+          background-color: ${theme.colors.bgSecondary};
         }
         
         .action-btn {
           padding: 6px 12px;
-          border-radius: ${THEME.borderRadius.md};
+          border-radius: ${theme.borderRadius.md};
           border: none;
           cursor: pointer;
           font-size: 12px;
           font-weight: 600;
-          transition: ${THEME.transitions.normal};
+          transition: ${theme.transitions.normal};
         }
         
         .action-btn-edit {
-          background-color: ${THEME.colors.infoLight};
-          color: ${THEME.colors.primary};
+          background-color: ${theme.colors.infoLight};
+          color: ${theme.colors.primary};
         }
         
         .action-btn-edit:hover {
-          background-color: ${THEME.colors.primary};
+          background-color: ${theme.colors.primary};
           color: white;
         }
         
         .action-btn-delete {
-          background-color: ${THEME.colors.dangerLight};
-          color: ${THEME.colors.danger};
+          background-color: ${theme.colors.dangerLight};
+          color: ${theme.colors.danger};
         }
         
         .action-btn-delete:hover {
-          background-color: ${THEME.colors.danger};
+          background-color: ${theme.colors.danger};
           color: white;
         }
       `}</style>
 
       {/* Sidebar */}
-      <ModernSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <ModernSidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab}
+        onProfileClick={() => setProfileModalOpen(true)}
+      />
 
       {/* Main Content */}
       <div style={{
@@ -150,9 +159,9 @@ export default function DashboardPage() {
       }}>
         {/* Header */}
         <div style={{
-          backgroundColor: THEME.colors.bgCard,
-          borderBottom: `1px solid ${THEME.colors.border}`,
-          padding: `${THEME.spacing.lg} ${THEME.spacing.xxl}`,
+          backgroundColor: theme.colors.bgCard,
+          borderBottom: `1px solid ${theme.colors.border}`,
+          padding: `${theme.spacing.lg} ${theme.spacing.xxl}`,
         }}>
           <div style={{
             display: 'flex',
@@ -161,10 +170,10 @@ export default function DashboardPage() {
           }}>
             <div>
               <h1 style={{
-                ...THEME.typography.h2,
-                color: THEME.colors.textPrimary,
+                ...theme.typography.h2,
+                color: theme.colors.textPrimary,
                 margin: 0,
-                marginBottom: THEME.spacing.sm,
+                marginBottom: theme.spacing.sm,
               }}>
                 {activeTab === 'overview' ? 'Dashboard' : 
                  activeTab === 'users' ? 'Users Management' :
@@ -172,8 +181,8 @@ export default function DashboardPage() {
                  'Access Logs'}
               </h1>
               <p style={{
-                ...THEME.typography.body,
-                color: THEME.colors.textSecondary,
+                ...theme.typography.body,
+                color: theme.colors.textSecondary,
                 margin: 0,
               }}>
                 Welcome back, {user?.full_name}
@@ -181,22 +190,22 @@ export default function DashboardPage() {
             </div>
             {activeTab !== 'overview' && activeTab !== 'logs' && (
               <button style={{
-                ...THEME.typography.body,
-                backgroundColor: THEME.colors.primary,
+                ...theme.typography.body,
+                backgroundColor: theme.colors.primary,
                 color: 'white',
                 border: 'none',
-                borderRadius: THEME.borderRadius.md,
-                padding: `${THEME.spacing.md} ${THEME.spacing.lg}`,
+                borderRadius: theme.borderRadius.md,
+                padding: `${theme.spacing.md} ${theme.spacing.lg}`,
                 cursor: 'pointer',
                 fontWeight: 600,
                 display: 'flex',
                 alignItems: 'center',
-                gap: THEME.spacing.md,
-                transition: THEME.transitions.normal,
+                gap: theme.spacing.md,
+                transition: theme.transitions.normal,
               }}
               onClick={() => activeTab === 'users' ? setUserModalOpen(true) : setDoorModalOpen(true)}
-              onMouseEnter={(e) => e.target.style.backgroundColor = THEME.colors.primaryDark}
-              onMouseLeave={(e) => e.target.style.backgroundColor = THEME.colors.primary}
+              onMouseEnter={(e) => e.target.style.backgroundColor = theme.colors.primaryDark}
+              onMouseLeave={(e) => e.target.style.backgroundColor = theme.colors.primary}
               >
                 <MdAdd size={20} />
                 Add {activeTab === 'users' ? 'User' : 'Door'}
@@ -209,7 +218,8 @@ export default function DashboardPage() {
         <div style={{
           flex: 1,
           overflow: 'auto',
-          padding: THEME.spacing.xxl,
+          padding: theme.spacing.xxl,
+          backgroundColor: theme.colors.bg,
         }}>
           {activeTab === 'overview' && (
             <div>
@@ -217,22 +227,22 @@ export default function DashboardPage() {
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: THEME.spacing.lg,
-                marginBottom: THEME.spacing.xxl,
+                gap: theme.spacing.lg,
+                marginBottom: theme.spacing.xxl,
               }}>
                 {[
-                  { label: 'Total Users', value: users.length, icon: MdPeople, color: THEME.colors.primary },
-                  { label: 'Active Doors', value: doors.length, icon: MdLocationCity, color: THEME.colors.success },
-                  { label: 'Access Logs', value: logs.length, icon: MdAssignment, color: THEME.colors.warning },
+                  { label: 'Total Users', value: users.length, icon: MdPeople, color: theme.colors.primary },
+                  { label: 'Active Doors', value: doors.length, icon: MdLocationCity, color: theme.colors.success },
+                  { label: 'Access Logs', value: logs.length, icon: MdAssignment, color: theme.colors.warning },
                 ].map((stat, idx) => {
                   const Icon = stat.icon
                   return (
                     <div key={idx} className="stat-card" style={{
-                      backgroundColor: THEME.colors.bgCard,
-                      border: `1px solid ${THEME.colors.border}`,
-                      borderRadius: THEME.borderRadius.lg,
-                      padding: THEME.spacing.xl,
-                      boxShadow: THEME.shadows.sm,
+                      backgroundColor: theme.colors.bgCard,
+                      border: `1px solid ${theme.colors.border}`,
+                      borderRadius: theme.borderRadius.lg,
+                      padding: theme.spacing.xl,
+                      boxShadow: theme.shadows.sm,
                     }}>
                       <div style={{
                         display: 'flex',
@@ -241,10 +251,10 @@ export default function DashboardPage() {
                       }}>
                         <div>
                           <p style={{
-                            ...THEME.typography.bodySmall,
-                            color: THEME.colors.textSecondary,
+                            ...theme.typography.bodySmall,
+                            color: theme.colors.textSecondary,
                             margin: 0,
-                            marginBottom: THEME.spacing.md,
+                            marginBottom: theme.spacing.md,
                           }}>
                             {stat.label}
                           </p>
@@ -272,24 +282,24 @@ export default function DashboardPage() {
 
               {/* Quick Links */}
               <div style={{
-                backgroundColor: THEME.colors.bgCard,
-                border: `1px solid ${THEME.colors.border}`,
-                borderRadius: THEME.borderRadius.lg,
-                padding: THEME.spacing.xl,
-                boxShadow: THEME.shadows.sm,
+                backgroundColor: theme.colors.bgCard,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.borderRadius.lg,
+                padding: theme.spacing.xl,
+                boxShadow: theme.shadows.sm,
               }}>
                 <h2 style={{
-                  ...THEME.typography.h4,
-                  color: THEME.colors.textPrimary,
+                  ...theme.typography.h4,
+                  color: theme.colors.textPrimary,
                   margin: 0,
-                  marginBottom: THEME.spacing.lg,
+                  marginBottom: theme.spacing.lg,
                 }}>
                   Quick Actions
                 </h2>
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                  gap: THEME.spacing.lg,
+                  gap: theme.spacing.lg,
                 }}>
                   {[
                     { label: 'Manage Users', action: () => setActiveTab('users') },
@@ -300,24 +310,24 @@ export default function DashboardPage() {
                       key={i}
                       onClick={link.action}
                       style={{
-                        padding: THEME.spacing.lg,
-                        backgroundColor: THEME.colors.bgSecondary,
-                        border: `1px solid ${THEME.colors.border}`,
-                        borderRadius: THEME.borderRadius.md,
-                        color: THEME.colors.textPrimary,
+                        padding: theme.spacing.lg,
+                        backgroundColor: theme.colors.bgSecondary,
+                        border: `1px solid ${theme.colors.border}`,
+                        borderRadius: theme.borderRadius.md,
+                        color: theme.colors.textPrimary,
                         fontWeight: 600,
                         cursor: 'pointer',
-                        transition: THEME.transitions.normal,
+                        transition: theme.transitions.normal,
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = THEME.colors.primary
+                        e.target.style.backgroundColor = theme.colors.primary
                         e.target.style.color = 'white'
-                        e.target.style.borderColor = THEME.colors.primary
+                        e.target.style.borderColor = theme.colors.primary
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = THEME.colors.bgSecondary
-                        e.target.style.color = THEME.colors.textPrimary
-                        e.target.style.borderColor = THEME.colors.border
+                        e.target.style.backgroundColor = theme.colors.bgSecondary
+                        e.target.style.color = theme.colors.textPrimary
+                        e.target.style.borderColor = theme.colors.border
                       }}
                     >
                       {link.label}
@@ -331,11 +341,11 @@ export default function DashboardPage() {
           {activeTab === 'users' && (
             <div>
               <div style={{
-                backgroundColor: THEME.colors.bgCard,
-                border: `1px solid ${THEME.colors.border}`,
-                borderRadius: THEME.borderRadius.lg,
+                backgroundColor: theme.colors.bgCard,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.borderRadius.lg,
                 overflow: 'hidden',
-                boxShadow: THEME.shadows.sm,
+                boxShadow: theme.shadows.sm,
               }}>
                 <table style={{
                   width: '100%',
@@ -343,35 +353,35 @@ export default function DashboardPage() {
                 }}>
                   <thead>
                     <tr style={{
-                      backgroundColor: THEME.colors.bgSecondary,
-                      borderBottom: `1px solid ${THEME.colors.border}`,
+                      backgroundColor: theme.colors.bgSecondary,
+                      borderBottom: `1px solid ${theme.colors.border}`,
                     }}>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Name</th>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Email</th>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Role</th>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'center',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Actions</th>
                     </tr>
@@ -379,36 +389,36 @@ export default function DashboardPage() {
                   <tbody>
                     {users.map((u, i) => (
                       <tr key={i} className="table-row" style={{
-                        borderBottom: `1px solid ${THEME.colors.border}`,
+                        borderBottom: `1px solid ${theme.colors.border}`,
                       }}>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          color: THEME.colors.textPrimary,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          color: theme.colors.textPrimary,
+                          ...theme.typography.body,
                         }}>
                           {u.full_name}
                         </td>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          color: THEME.colors.textSecondary,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          color: theme.colors.textSecondary,
+                          ...theme.typography.body,
                         }}>
                           {u.email}
                         </td>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          color: THEME.colors.textPrimary,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          color: theme.colors.textPrimary,
+                          ...theme.typography.body,
                         }}>
                           {u.role || 'User'}
                         </td>
                         <td style={{
-                          padding: THEME.spacing.lg,
+                          padding: theme.spacing.lg,
                           textAlign: 'center',
                         }}>
                           <div style={{
                             display: 'flex',
-                            gap: THEME.spacing.md,
+                            gap: theme.spacing.md,
                             justifyContent: 'center',
                           }}>
                             <button className="action-btn action-btn-delete" onClick={() => handleDeleteUser(u.user_id)}>
@@ -422,9 +432,9 @@ export default function DashboardPage() {
                 </table>
                 {users.length === 0 && (
                   <div style={{
-                    padding: THEME.spacing.xxl,
+                    padding: theme.spacing.xxl,
                     textAlign: 'center',
-                    color: THEME.colors.textTertiary,
+                    color: theme.colors.textTertiary,
                   }}>
                     No users found
                   </div>
@@ -436,11 +446,11 @@ export default function DashboardPage() {
           {activeTab === 'doors' && (
             <div>
               <div style={{
-                backgroundColor: THEME.colors.bgCard,
-                border: `1px solid ${THEME.colors.border}`,
-                borderRadius: THEME.borderRadius.lg,
+                backgroundColor: theme.colors.bgCard,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.borderRadius.lg,
                 overflow: 'hidden',
-                boxShadow: THEME.shadows.sm,
+                boxShadow: theme.shadows.sm,
               }}>
                 <table style={{
                   width: '100%',
@@ -448,35 +458,35 @@ export default function DashboardPage() {
                 }}>
                   <thead>
                     <tr style={{
-                      backgroundColor: THEME.colors.bgSecondary,
-                      borderBottom: `1px solid ${THEME.colors.border}`,
+                      backgroundColor: theme.colors.bgSecondary,
+                      borderBottom: `1px solid ${theme.colors.border}`,
                     }}>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Name</th>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Location</th>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Status</th>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'center',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Actions</th>
                     </tr>
@@ -484,32 +494,32 @@ export default function DashboardPage() {
                   <tbody>
                     {doors.map((d, i) => (
                       <tr key={i} className="table-row" style={{
-                        borderBottom: `1px solid ${THEME.colors.border}`,
+                        borderBottom: `1px solid ${theme.colors.border}`,
                       }}>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          color: THEME.colors.textPrimary,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          color: theme.colors.textPrimary,
+                          ...theme.typography.body,
                         }}>
                           {d.door_name}
                         </td>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          color: THEME.colors.textSecondary,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          color: theme.colors.textSecondary,
+                          ...theme.typography.body,
                         }}>
                           {d.location}
                         </td>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          color: THEME.colors.textPrimary,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          color: theme.colors.textPrimary,
+                          ...theme.typography.body,
                         }}>
                           <span style={{
-                            backgroundColor: THEME.colors.successLight,
-                            color: THEME.colors.success,
-                            padding: `${THEME.spacing.xs} ${THEME.spacing.md}`,
-                            borderRadius: THEME.borderRadius.full,
+                            backgroundColor: theme.colors.successLight,
+                            color: theme.colors.success,
+                            padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+                            borderRadius: theme.borderRadius.full,
                             fontSize: '12px',
                             fontWeight: 600,
                           }}>
@@ -517,12 +527,12 @@ export default function DashboardPage() {
                           </span>
                         </td>
                         <td style={{
-                          padding: THEME.spacing.lg,
+                          padding: theme.spacing.lg,
                           textAlign: 'center',
                         }}>
                           <div style={{
                             display: 'flex',
-                            gap: THEME.spacing.md,
+                            gap: theme.spacing.md,
                             justifyContent: 'center',
                           }}>
                             <button className="action-btn action-btn-delete" onClick={() => handleDeleteDoor(d.door_id)}>
@@ -536,9 +546,9 @@ export default function DashboardPage() {
                 </table>
                 {doors.length === 0 && (
                   <div style={{
-                    padding: THEME.spacing.xxl,
+                    padding: theme.spacing.xxl,
                     textAlign: 'center',
-                    color: THEME.colors.textTertiary,
+                    color: theme.colors.textTertiary,
                   }}>
                     No doors found
                   </div>
@@ -550,11 +560,11 @@ export default function DashboardPage() {
           {activeTab === 'logs' && (
             <div>
               <div style={{
-                backgroundColor: THEME.colors.bgCard,
-                border: `1px solid ${THEME.colors.border}`,
-                borderRadius: THEME.borderRadius.lg,
+                backgroundColor: theme.colors.bgCard,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.borderRadius.lg,
                 overflow: 'hidden',
-                boxShadow: THEME.shadows.sm,
+                boxShadow: theme.shadows.sm,
               }}>
                 <table style={{
                   width: '100%',
@@ -562,35 +572,35 @@ export default function DashboardPage() {
                 }}>
                   <thead>
                     <tr style={{
-                      backgroundColor: THEME.colors.bgSecondary,
-                      borderBottom: `1px solid ${THEME.colors.border}`,
+                      backgroundColor: theme.colors.bgSecondary,
+                      borderBottom: `1px solid ${theme.colors.border}`,
                     }}>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>User</th>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Door</th>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Result</th>
                       <th style={{
-                        padding: THEME.spacing.lg,
+                        padding: theme.spacing.lg,
                         textAlign: 'left',
-                        ...THEME.typography.caption,
-                        color: THEME.colors.textSecondary,
+                        ...theme.typography.caption,
+                        color: theme.colors.textSecondary,
                         fontWeight: 600,
                       }}>Timestamp</th>
                     </tr>
@@ -598,31 +608,31 @@ export default function DashboardPage() {
                   <tbody>
                     {logs.map((log, i) => (
                       <tr key={i} className="table-row" style={{
-                        borderBottom: `1px solid ${THEME.colors.border}`,
+                        borderBottom: `1px solid ${theme.colors.border}`,
                       }}>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          color: THEME.colors.textPrimary,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          color: theme.colors.textPrimary,
+                          ...theme.typography.body,
                         }}>
                           {log.user_id}
                         </td>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          color: THEME.colors.textSecondary,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          color: theme.colors.textSecondary,
+                          ...theme.typography.body,
                         }}>
                           {log.door_id}
                         </td>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          ...theme.typography.body,
                         }}>
                           <span style={{
-                            backgroundColor: log.result === 'GRANTED' ? THEME.colors.successLight : THEME.colors.dangerLight,
-                            color: log.result === 'GRANTED' ? THEME.colors.success : THEME.colors.danger,
-                            padding: `${THEME.spacing.xs} ${THEME.spacing.md}`,
-                            borderRadius: THEME.borderRadius.full,
+                            backgroundColor: log.result === 'GRANTED' ? theme.colors.successLight : theme.colors.dangerLight,
+                            color: log.result === 'GRANTED' ? theme.colors.success : theme.colors.danger,
+                            padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+                            borderRadius: theme.borderRadius.full,
                             fontSize: '12px',
                             fontWeight: 600,
                           }}>
@@ -630,9 +640,9 @@ export default function DashboardPage() {
                           </span>
                         </td>
                         <td style={{
-                          padding: THEME.spacing.lg,
-                          color: THEME.colors.textTertiary,
-                          ...THEME.typography.body,
+                          padding: theme.spacing.lg,
+                          color: theme.colors.textTertiary,
+                          ...theme.typography.body,
                         }}>
                           {new Date(log.timestamp).toLocaleString()}
                         </td>
@@ -642,9 +652,9 @@ export default function DashboardPage() {
                 </table>
                 {logs.length === 0 && (
                   <div style={{
-                    padding: THEME.spacing.xxl,
+                    padding: theme.spacing.xxl,
                     textAlign: 'center',
-                    color: THEME.colors.textTertiary,
+                    color: theme.colors.textTertiary,
                   }}>
                     No logs found
                   </div>
@@ -678,6 +688,18 @@ export default function DashboardPage() {
             if (updated) fetchDoors()
           }}
           onSave={fetchDoors}
+        />
+      )}
+
+      {profileModalOpen && user && (
+        <ProfileModal
+          user={user}
+          isDarkMode={isDarkMode}
+          onClose={() => setProfileModalOpen(false)}
+          onUpdate={() => {
+            setProfileModalOpen(false)
+            window.location.reload()
+          }}
         />
       )}
     </div>

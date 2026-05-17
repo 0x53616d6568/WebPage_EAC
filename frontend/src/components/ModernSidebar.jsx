@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
-import { MdGridView, MdPeople, MdLocationCity, MdAssignment, MdLogout, MdMenu, MdClose, MdChevronRight } from 'react-icons/md'
-import { THEME } from '../theme/design-system'
+import { useThemeStore } from '../store/themeStore'
+import { MdGridView, MdPeople, MdLocationCity, MdAssignment, MdLogout, MdMenu, MdClose, MdDarkMode, MdLightMode, MdPerson } from 'react-icons/md'
+import { getTheme } from '../theme/design-system'
 
 const menuItems = [
   { id: 'overview', label: 'Dashboard', icon: MdGridView },
@@ -11,115 +11,103 @@ const menuItems = [
   { id: 'logs', label: 'Access Logs', icon: MdAssignment },
 ]
 
-export default function ModernSidebar({ activeTab, setActiveTab }) {
-  const [open, setOpen] = useState(true)
+export default function ModernSidebar({ activeTab, setActiveTab, onProfileClick }) {
+  const [isOpen, setIsOpen] = useState(true)
   const { user, logout } = useAuthStore()
-  const navigate = useNavigate()
+  const { isDarkMode, toggleDarkMode } = useThemeStore()
+  const theme = getTheme(isDarkMode)
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    window.location.href = '/login'
   }
 
   return (
     <>
       <style>{`
         .nav-link {
-          transition: ${THEME.transitions.normal};
+          transition: ${theme.transitions.normal};
         }
-
         .nav-link:hover {
-          background-color: ${THEME.colors.bgSecondary};
-          transform: translateX(4px);
+          background-color: ${theme.colors.bgHover};
         }
-
         .nav-link.active {
-          background: linear-gradient(90deg, ${THEME.colors.primary}, transparent);
-          color: ${THEME.colors.primary};
-          border-left: 4px solid ${THEME.colors.primary};
+          background-color: ${theme.colors.primary};
+          color: white;
         }
       `}</style>
 
       {/* Mobile Toggle */}
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setIsOpen(!isOpen)}
         style={{
           display: 'none',
-          '@media (max-width: 768px)': { display: 'block' },
+          '@media (max-width: 768px)': {
+            display: 'block',
+          },
           position: 'fixed',
-          top: THEME.spacing.lg,
-          left: THEME.spacing.lg,
-          zIndex: 50,
-          backgroundColor: THEME.colors.primary,
-          color: 'white',
+          top: 16,
+          left: 16,
+          zIndex: 999,
+          background: 'none',
           border: 'none',
-          borderRadius: THEME.borderRadius.md,
-          padding: THEME.spacing.md,
+          fontSize: '24px',
           cursor: 'pointer',
+          color: theme.colors.textPrimary,
         }}
       >
-        {open ? <MdClose size={24} /> : <MdMenu size={24} />}
+        {isOpen ? <MdClose /> : <MdMenu />}
       </button>
 
       {/* Sidebar */}
       <div
         style={{
-          width: open ? '280px' : '80px',
-          backgroundColor: THEME.colors.bgCard,
-          borderRight: `1px solid ${THEME.colors.border}`,
+          width: isOpen ? '280px' : '80px',
+          backgroundColor: theme.colors.bgCard,
+          borderRight: `1px solid ${theme.colors.border}`,
+          height: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
-          transition: THEME.transitions.normal,
-          overflowY: 'auto',
+          transition: theme.transitions.normal,
+          overflow: 'hidden',
+          flexShrink: 0,
         }}
       >
-        {/* Logo */}
+        {/* Logo/Branding */}
         <div
           style={{
-            padding: THEME.spacing.lg,
-            borderBottom: `1px solid ${THEME.colors.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: THEME.spacing.md,
-            overflow: 'hidden',
+            padding: theme.spacing.lg,
+            borderBottom: `1px solid ${theme.colors.border}`,
+            textAlign: 'center',
           }}
         >
           <div
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: THEME.borderRadius.md,
-              background: `linear-gradient(135deg, ${THEME.colors.primary}, ${THEME.colors.primaryLight})`,
+              backgroundColor: theme.colors.primary,
+              borderRadius: theme.borderRadius.md,
+              margin: '0 auto',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              fontWeight: 'bold',
-              fontSize: '18px',
-              flexShrink: 0,
+              fontWeight: 700,
+              fontSize: '20px',
             }}
           >
-            🔐
+            AC
           </div>
-          {open && (
-            <div>
-              <div style={{
-                fontSize: '14px',
-                fontWeight: 'bold',
-                color: THEME.colors.textPrimary,
-              }}>
-                SecureApp
-              </div>
-              <div style={{
-                fontSize: '10px',
-                color: THEME.colors.textSecondary,
-              }}>
-                EAC System
-              </div>
-            </div>
+          {isOpen && (
+            <p
+              style={{
+                ...theme.typography.caption,
+                color: theme.colors.textSecondary,
+                margin: `${theme.spacing.md} 0 0 0`,
+              }}
+            >
+              Access Control
+            </p>
           )}
         </div>
 
@@ -127,106 +115,144 @@ export default function ModernSidebar({ activeTab, setActiveTab }) {
         <nav
           style={{
             flex: 1,
-            padding: THEME.spacing.md,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: THEME.spacing.sm,
-            overflowY: 'auto',
+            padding: theme.spacing.lg,
+            overflow: 'auto',
           }}
         >
           {menuItems.map((item) => {
             const Icon = item.icon
             const isActive = activeTab === item.id
-
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={isActive ? 'nav-link active' : 'nav-link'}
+                className="nav-link"
                 style={{
+                  width: '100%',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: THEME.spacing.md,
-                  padding: `${THEME.spacing.md} ${THEME.spacing.lg}`,
-                  borderRadius: THEME.borderRadius.md,
-                  backgroundColor: isActive ? THEME.colors.infoLight : 'transparent',
-                  color: isActive ? THEME.colors.primary : THEME.colors.textSecondary,
+                  gap: theme.spacing.md,
+                  padding: theme.spacing.md,
+                  marginBottom: theme.spacing.md,
                   border: 'none',
+                  borderRadius: theme.borderRadius.md,
+                  backgroundColor: isActive ? theme.colors.primary : 'transparent',
+                  color: isActive ? 'white' : theme.colors.textSecondary,
                   cursor: 'pointer',
                   fontSize: '14px',
-                  fontWeight: isActive ? 600 : 500,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  fontWeight: 600,
+                  transition: theme.transitions.normal,
                 }}
               >
-                <Icon size={20} style={{ flexShrink: 0 }} />
-                {open && <span>{item.label}</span>}
+                <Icon size={20} />
+                {isOpen && <span>{item.label}</span>}
               </button>
             )
           })}
         </nav>
 
-        {/* User Profile */}
+        {/* User Profile Section */}
         <div
           style={{
-            padding: THEME.spacing.lg,
-            borderTop: `1px solid ${THEME.colors.border}`,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: THEME.spacing.md,
+            borderTop: `1px solid ${theme.colors.border}`,
+            padding: theme.spacing.lg,
           }}
         >
-          {open && (
-            <div>
-              <div style={{
-                fontSize: '12px',
-                color: THEME.colors.textSecondary,
-                marginBottom: THEME.spacing.xs,
-              }}>
-                Logged in as
-              </div>
-              <div style={{
-                fontSize: '14px',
-                fontWeight: 600,
-                color: THEME.colors.textPrimary,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}>
-                {user?.full_name || 'Admin'}
-              </div>
-            </div>
-          )}
-
+          {/* Dark Mode Toggle */}
           <button
-            onClick={handleLogout}
+            onClick={toggleDarkMode}
             style={{
+              width: '100%',
               display: 'flex',
               alignItems: 'center',
-              gap: THEME.spacing.md,
-              padding: `${THEME.spacing.md} ${THEME.spacing.lg}`,
-              borderRadius: THEME.borderRadius.md,
-              backgroundColor: THEME.colors.dangerLight,
-              color: THEME.colors.danger,
-              border: `1px solid ${THEME.colors.danger}`,
+              gap: theme.spacing.md,
+              padding: theme.spacing.md,
+              marginBottom: theme.spacing.md,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.borderRadius.md,
+              backgroundColor: theme.colors.bgSecondary,
+              color: theme.colors.textSecondary,
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: 600,
-              transition: THEME.transitions.normal,
-              justifyContent: open ? 'flex-start' : 'center',
+              transition: theme.transitions.normal,
             }}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = THEME.colors.danger
-              e.target.style.color = 'white'
+              e.currentTarget.style.backgroundColor = theme.colors.bgHover
+              e.currentTarget.style.color = theme.colors.textPrimary
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = THEME.colors.dangerLight
-              e.target.style.color = THEME.colors.danger
+              e.currentTarget.style.backgroundColor = theme.colors.bgSecondary
+              e.currentTarget.style.color = theme.colors.textSecondary
+            }}
+          >
+            {isDarkMode ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
+            {isOpen && <span>{isDarkMode ? 'Light' : 'Dark'}</span>}
+          </button>
+
+          {/* Profile Button */}
+          {user && (
+            <button
+              onClick={onProfileClick}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: theme.spacing.md,
+                padding: theme.spacing.md,
+                marginBottom: theme.spacing.md,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.borderRadius.md,
+                backgroundColor: theme.colors.bgSecondary,
+                color: theme.colors.textSecondary,
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 600,
+                transition: theme.transitions.normal,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme.colors.bgHover
+                e.currentTarget.style.color = theme.colors.textPrimary
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = theme.colors.bgSecondary
+                e.currentTarget.style.color = theme.colors.textSecondary
+              }}
+            >
+              <MdPerson size={20} />
+              {isOpen && <span>Profile</span>}
+            </button>
+          )}
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: theme.spacing.md,
+              padding: theme.spacing.md,
+              border: 'none',
+              borderRadius: theme.borderRadius.md,
+              backgroundColor: theme.colors.dangerLight,
+              color: theme.colors.danger,
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
+              transition: theme.transitions.normal,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme.colors.danger
+              e.currentTarget.style.color = 'white'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme.colors.dangerLight
+              e.currentTarget.style.color = theme.colors.danger
             }}
           >
             <MdLogout size={20} />
-            {open && 'Logout'}
+            {isOpen && <span>Logout</span>}
           </button>
         </div>
       </div>
