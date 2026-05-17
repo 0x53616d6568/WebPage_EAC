@@ -438,7 +438,7 @@ export default function DashboardPage() {
                           color: theme.colors.textPrimary,
                           ...theme.typography.body,
                         }}>
-                          {u.role || 'User'}
+                          {u.role_name || 'User'}
                         </td>
                         <td style={{
                           padding: theme.spacing.lg,

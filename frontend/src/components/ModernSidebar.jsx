@@ -36,26 +36,31 @@ export default function ModernSidebar({ activeTab, setActiveTab, onProfileClick 
           background-color: ${theme.colors.primary};
           color: white;
         }
+        
+        .mobile-toggle {
+          display: none;
+          position: fixed;
+          top: 16px;
+          left: 16px;
+          z-index: 999;
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: ${theme.colors.textPrimary};
+        }
+        
+        @media (max-width: 768px) {
+          .mobile-toggle {
+            display: block;
+          }
+        }
       `}</style>
 
       {/* Mobile Toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: 'none',
-          '@media (max-width: 768px)': {
-            display: 'block',
-          },
-          position: 'fixed',
-          top: 16,
-          left: 16,
-          zIndex: 999,
-          background: 'none',
-          border: 'none',
-          fontSize: '24px',
-          cursor: 'pointer',
-          color: theme.colors.textPrimary,
-        }}
+        className="mobile-toggle"
       >
         {isOpen ? <MdClose /> : <MdMenu />}
       </button>
