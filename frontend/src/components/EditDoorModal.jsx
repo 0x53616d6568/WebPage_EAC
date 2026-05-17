@@ -9,6 +9,7 @@ export default function EditDoorModal({ door, isDarkMode, onClose, onSuccess }) 
     door_name: door?.door_name || '',
     location: door?.location || '',
     security_level: door?.security_level || 1,
+    requires_face_auth: door?.requires_face_auth ? 1 : 0,
     fallback_method: door?.fallback_method || 'PIN',
   })
   const [loading, setLoading] = useState(false)
@@ -16,8 +17,11 @@ export default function EditDoorModal({ door, isDarkMode, onClose, onSuccess }) 
   const [success, setSuccess] = useState('')
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const { name, value, type, checked } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (checked ? 1 : 0) : value,
+    }))
     setError('')
   }
 
@@ -235,6 +239,53 @@ export default function EditDoorModal({ door, isDarkMode, onClose, onSuccess }) 
               <option value="RFID">RFID Card</option>
               <option value="MANUAL">Manual Override</option>
             </select>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: theme.spacing.lg,
+              backgroundColor: theme.colors.bgSecondary,
+              borderRadius: theme.borderRadius.md,
+              border: `1px solid ${theme.colors.border}`,
+            }}
+          >
+            <input
+              type="checkbox"
+              name="requires_face_auth"
+              checked={formData.requires_face_auth === 1}
+              onChange={handleChange}
+              style={{
+                width: '18px',
+                height: '18px',
+                cursor: 'pointer',
+                marginRight: theme.spacing.lg,
+                accentColor: theme.colors.primary,
+              }}
+              id="face-auth-toggle"
+            />
+            <label
+              htmlFor="face-auth-toggle"
+              style={{
+                ...theme.typography.body,
+                fontWeight: 600,
+                color: theme.colors.textPrimary,
+                cursor: 'pointer',
+                flex: 1,
+                margin: 0,
+              }}
+            >
+              Require Face Recognition
+            </label>
+            <div
+              style={{
+                ...theme.typography.bodySmall,
+                color: theme.colors.textSecondary,
+              }}
+            >
+              {formData.requires_face_auth ? 'Enabled' : 'Disabled'}
+            </div>
           </div>
 
           <button
